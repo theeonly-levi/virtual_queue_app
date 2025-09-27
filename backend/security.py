@@ -19,3 +19,5 @@ def store_session(patient_id, info):
 
 def clear_session():
     session_data.clear()
+
+print("test")
