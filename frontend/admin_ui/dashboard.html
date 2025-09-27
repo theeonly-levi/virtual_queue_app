@@ -5,7 +5,26 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Admin Queue Dashboard</h1>
+    <h1>Virtual Queue</h1>
+    
+    <!-- ...existing code... -->
+    <form id="loginForm">
+        <h2>Login</h2>
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <br>
+        <button type="submit">Login</button>
+        <br>
+        <span>
+            Don't have an account?
+            <a href="register.html">Register</a>
+        </span>
+    </form>
+<!-- ...existing code... -->
+
     <div id="queueList"></div>
     <script src="admin.js"></script>
 </body>
