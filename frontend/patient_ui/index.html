@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patient Registration</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Virtual Clinic Queue</h1>
+    <form id="registrationForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" required>
+        <label for="visit_type">Visit Type:</label>
+        <input type="text" id="visit_type" required>
+        <button type="submit">Register</button>
+    </form>
+    <div id="queueStatus"></div>
+    <script src="queue_status.js"></script>
+</body>
+</html>
