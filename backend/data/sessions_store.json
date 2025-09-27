@@ -1,0 +1,44 @@
+{
+  "demo": [
+    {
+      "role": "user",
+      "content": "Tell me about ibuprofen",
+      "ts": 1759015428.024371
+    },
+    {
+      "role": "bot",
+      "content": "Medication: Ibuprofen\nClass: Nonsteroidal anti-inflammatory drug (NSAID)\nCommon uses: Pain relief; Reduce inflammation; Lower fever\nCommon side effects: Nausea, Heartburn, Dizziness\nImportant warnings: Risk of gastrointestinal bleeding; Possible cardiovascular risk\nInteractions note: Caution with anticoagulants and other NSAIDs.\nEducational information only. Not medical advice. Consult a licensed healthcare professional. Not for emergencies.",
+      "ts": 1759015433.3921134
+    },
+    {
+      "role": "user",
+      "content": "What dosage should I take?",
+      "ts": 1759015433.3925493
+    },
+    {
+      "role": "bot",
+      "content": "I cannot provide dosing, diagnostic, or emergency guidance. Educational information only. Not medical advice. Consult a licensed healthcare professional. Not for emergencies.",
+      "ts": 1759015433.3925655
+    },
+    {
+      "role": "user",
+      "content": "Tell me about ibuprofen",
+      "ts": 1759015982.7844121
+    },
+    {
+      "role": "bot",
+      "content": "Ibuprofen is a nonsteroidal anti-inflammatory drug (NSAID) commonly used for pain relief, reducing inflammation, and lowering fever. Common side effects include nausea, heartburn, and dizziness. Serious warnings associated with ibuprofen involve the risk of gastrointestinal bleeding and possible cardiovascular risks. It is important to use caution when taking ibuprofen with anticoagulants or other NSAIDs due to potential interactions. \n\nDISCLAIMER: This information is educational and not a substitute for professional medical advice. Always consult a healthcare provider for diagnosis and treatment.\nEducational information only. Not medical advice. Consult a licensed healthcare professional. Not for emergencies.",
+      "ts": 1759015985.6978016
+    },
+    {
+      "role": "user",
+      "content": "What dosage should I take?",
+      "ts": 1759015985.698209
+    },
+    {
+      "role": "bot",
+      "content": "I cannot provide dosing, diagnostic, or emergency guidance. Educational information only. Not medical advice. Consult a licensed healthcare professional. Not for emergencies.",
+      "ts": 1759015985.6982234
+    }
+  ]
+}
