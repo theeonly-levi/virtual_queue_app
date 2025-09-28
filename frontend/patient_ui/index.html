@@ -1,97 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Virtual                                                                                                                                                   Queue</title>
-
-    <title>Admin Dashboard</title>
-
+    <title>Patient Registration</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Virtual Queue</h1>
-
-
-    <!-- Authentication Card -->
-    <section class="card" id="authCard" aria-live="polite">
-        <form id="loginForm" autocomplete="on">
-            <h2>Sign In</h2>
-            <div class="field">
-                <label for="login_email">Email</label>
-                <input type="email" id="login_email" name="email" required autocomplete="email" placeholder="you@example.com">
-            </div>
-            <div class="field">
-                <label for="login_password">Password</label>
-                <input type="password" id="login_password" name="password" required autocomplete="current-password" placeholder="••••••••">
-            </div>
-            <div class="error" id="loginError" role="alert" aria-live="assertive"></div>
-            <button type="submit" class="primary">Log In</button>
-            <p class="switcher">No account? <button type="button" class="linkish" id="showRegisterBtn" aria-controls="registerForm">Register</button></p>
-        </form>
-
-        <form id="registerForm" class="hidden" autocomplete="on">
-            <h2>Create Account</h2>
-            <div class="field">
-                <label for="reg_name">Full Name</label>
-                <input type="text" id="reg_name" name="name" required placeholder="Jane Doe" autocomplete="name">
-            </div>
-            <div class="field">
-                <label for="reg_email">Email</label>
-                <input type="email" id="reg_email" name="email" required autocomplete="email" placeholder="you@example.com">
-            </div>
-            <div class="field">
-                <label for="reg_password">Password</label>
-                <input type="password" id="reg_password" name="password" required minlength="6" autocomplete="new-password">
-            </div>
-            <div class="field">
-                <label for="reg_password_confirm">Confirm Password</label>
-                <input type="password" id="reg_password_confirm" required autocomplete="new-password">
-            </div>
-            <div class="field">
-                <label for="reg_visit_type">Visit Type</label>
-                <input type="text" id="reg_visit_type" name="visit_type" required placeholder="e.g. Consultation">
-            </div>
-            <div class="error" id="registerError" role="alert" aria-live="assertive"></div>
-            <button type="submit" class="primary">Register</button>
-            <p class="switcher">Have an account? <button type="button" class="linkish" id="showLoginBtn" aria-controls="loginForm">Back to Login</button></p>
-        </form>
-    </section>
-
-    <!-- Queue Section (hidden until login) -->
-    <section id="queueSection" class="hidden" aria-live="polite">
-        <h2>Your Queue Status</h2>
-        <div id="queueStatus" class="queue-box">Not checked in yet.</div>
-        <div class="actions">
-            <button id="refreshQueueBtn" type="button" class="secondary">Refresh Status</button>
-            <button id="logoutBtn" type="button" class="linkish small">Log out</button>
-        </div>
-    </section>
-
-    <script src="queue_status.js" defer></script>
-
-    
-    <!-- ...existing code... -->
-    <form id="loginForm">
-        <h2>Patient Login</h2>
-        <div class="input-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" placeholder="Enter your username" required>
-        </div>
-        <div class="input-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter your password" required>
-        </div>
-        <button type="submit" class="login-btn">Login</button>
-        <div class="register-section">
-            <span>Don't have an account?</span>
-            <a href="register.html" class="register-btn">Register</a>
-        </div>
+    <h1>Virtual Clinic Queue</h1>
+    <form id="registrationForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" required>
+        <label for="visit_type">Visit Type:</label>
+        <input type="text" id="visit_type" required>
+        <button type="submit">Register</button>
     </form>
-<!-- ...existing code... -->
-
-    <div id="queueList"></div>
-    <script src="admin.js"></script>
+    <div id="queueStatus"></div>
+    <script src="queue_status.js"></script>
 </body>
 </html>
