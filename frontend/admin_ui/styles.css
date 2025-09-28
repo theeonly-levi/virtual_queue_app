@@ -183,12 +183,72 @@ button[type="submit"]:hover {
     animation: fadeInUp 0.8s;
 }
 
-/* Queue List container */
-#queueList {
-    margin-top: 30px;
-    width: 100%;
-    max-width: 700px;
+/* Admin dashboard layout additions */
+.top-bar {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
+    width: 100%;
+    max-width: 900px;
+    margin: 10px auto 20px auto;
+}
+.session-info {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+#logout-btn {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#logout-btn:hover { background: #c0392b; }
+
+.actions { margin: 10px 0 20px 0; }
+.actions button {
+    background: #27ae60;
+    color: #fff;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+}
+.actions button:hover { background: #1e8c4d; }
+
+.table-wrapper {
+    width: 100%;
+    max-width: 900px;
+    background: #fff;
+    padding: 20px 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    overflow-x: auto;
+}
+
+#queue-table { width: 100%; border-collapse: collapse; }
+#queue-table th, #queue-table td { padding: 10px 12px; text-align: left; }
+#queue-table thead { background: #3498db; color:#fff; }
+#queue-table tbody tr { border-bottom: 1px solid #eee; transition: background 0.2s; }
+#queue-table tbody tr:hover { background: #f5fbff; }
+
+.row-serving { background: #fffbea !important; }
+.status-waiting { color: #555; }
+.status-serving { color: #d35400; font-weight: 600; }
+.status-done { color: #2ecc71; }
+
+td button { background:#2980b9; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; }
+td button:hover { background:#1f6390; }
+
+.serving-box { margin: 10px 0; font-size: 15px; background: #fffbea; padding: 10px 14px; border-left:4px solid #f39c12; border-radius:6px; }
+
+#refresh-status { font-size: 12px; color:#666; margin-bottom:10px; }
+
+@media (max-width: 640px) {
+    .top-bar h2 { font-size: 20px; }
+    #queue-table th, #queue-table td { font-size: 12px; padding: 6px; }
+    .actions button { width: 100%; }
 }

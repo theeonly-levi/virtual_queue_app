@@ -36,7 +36,7 @@
             </form>
         </section>
 
-        <!-- Queue Interaction -->
+    <!-- Queue Interaction (shown after authentication) -->
         <section id="queueSection" class="card hidden">
             <header class="section-head">
                 <h2>Your Ticket</h2>
@@ -60,6 +60,20 @@
             <div class="actions-row">
                 <button id="refreshBtn" class="btn outline" type="button">Refresh Status</button>
                 <button id="leaveBtn" class="btn danger ghost" type="button" disabled>Leave Queue (todo)</button>
+            </div>
+
+            <!-- AI Advice Panel -->
+            <div id="advicePanel" class="advice-panel hidden">
+                <h3>Medication Info Assistant</h3>
+                <p class="muted small">Educational only. Not medical advice.</p>
+                <form id="adviceForm" class="inline-form">
+                    <input id="adviceInput" placeholder="Ask about a medication (e.g., ibuprofen)" required />
+                    <button type="submit" class="btn secondary">Ask</button>
+                </form>
+                <div id="adviceResult" class="advice-result"></div>
+            </div>
+            <div class="actions-row">
+                <button id="toggleAdviceBtn" class="btn ghost small" type="button">Medication Info</button>
             </div>
         </section>
     </main>

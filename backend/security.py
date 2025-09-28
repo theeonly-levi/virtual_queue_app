@@ -41,8 +41,18 @@ app = Flask(__name__)
 # -------------------------------
 @app.before_request
 def enforce_https():
-    if not request.is_secure and app.env != "development":
-        return redirect(request.url.replace("http://", "https://"), code=301)
+    """Redirect plain HTTP to HTTPS when behind a proxy (Render, etc.).
+
+    Uses X-Forwarded-Proto so request.is_secure isn't solely relied upon.
+    Skips in development mode.
+    """
+    if app.env == "development":
+        return  # allow local http
+    xf_proto = request.headers.get("X-Forwarded-Proto", "http")
+    if xf_proto != "https":
+        # Build https version
+        secure_url = request.url.replace("http://", "https://", 1)
+        return redirect(secure_url, code=301)
 
 @app.after_request
 def set_security_headers(response):
@@ -64,26 +74,17 @@ def set_security_headers(response):
     return response
 
 # -------------------------------
-# Database setup
+# Database setup (delegated to db_manager)
 # -------------------------------
-DB_PATH = "database.db"
-
-def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users (
-                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                 username TEXT UNIQUE,
-                 password TEXT
-                 )''')
-    conn.commit()
-    conn.close()
-
-init_db()
+# Legacy inline user table initialization removed. db_manager.py now owns the
+# authoritative user + queue schema. If a separate file created an older
+# 'users' table with plaintext passwords, db_manager includes a migration to
+# password_hash. Keeping this section minimal reduces duplication.
 
 # Integrate new db-backed queue + users abstraction
 from . import db_manager  # type: ignore  # noqa: E402
 from .queue_manager import queue_manager  # noqa: E402
+from . import ai_advice  # noqa: E402
 
 def seed_admin():
     adm = db_manager.get_user_by_username('admin')
@@ -272,8 +273,43 @@ def queue_done(entry_id: int):
         return jsonify({'error': 'Not found or already done'}), 404
     return jsonify({'message': 'Marked done'})
 
+@app.route('/queue/leave', methods=['POST'])
+@login_required
+def queue_leave():
+    user_id = request.user['user_id']
+    from . import db_manager as _dbm  # local import to avoid circular on module load
+    ok = _dbm.cancel_active_for_user(user_id)
+    if not ok:
+        return jsonify({'error': 'No waiting entry to cancel'}), 409
+    return jsonify({'message': 'Left queue'})
+
+# -------------------------------
+# AI Advice (Medication info assistant)
+# -------------------------------
+@app.route('/ai/advice', methods=['POST'])
+@login_required
+def ai_advice_endpoint():
+    data = request.get_json(force=True, silent=True) or {}
+    prompt = (data.get('question') or data.get('q') or '').strip()
+    if not prompt:
+        return jsonify({'error': 'Missing question'}), 400
+    session_id = f"user-{request.user['user_id']}"
+    result = ai_advice.handle_user_message(session_id=session_id, message=prompt)
+    return jsonify({
+        'answer': result.get('answer'),
+        'turns': result.get('turns'),
+        'llm_used': result.get('llm_used'),
+        'session_id': result.get('session_id')
+    })
+
 # -------------------------------
 # Run
 # -------------------------------
+@app.route('/healthz')
+def healthz():
+    return jsonify({"status": "ok"})
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Bind to PORT if provided (Render), else default 5000
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

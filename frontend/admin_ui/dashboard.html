@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Virtual Queue</h1>
+    <h1>Virtual Queue Admin</h1>
     
     <!-- ...existing code... -->
     <div id="login-section">
@@ -28,9 +28,35 @@
     </div>
 
     <div id="dashboard-content" style="display: none;">
-        <h2>Queue Status</h2>
-        <p id="queue-count"></p>
-        <ul id="queue-list"></ul>
+        <div class="top-bar">
+            <h2>Queue Dashboard</h2>
+            <div class="session-info">
+                <span id="admin-username"></span>
+                <button id="logout-btn" type="button">Logout</button>
+            </div>
+        </div>
+        <div id="queue-metrics">
+            <div id="queue-count"></div>
+            <div id="serving-indicator" class="serving-box" style="display:none;"></div>
+        </div>
+        <div class="actions">
+            <button id="advance-btn" type="button">Advance Queue</button>
+        </div>
+        <div class="refresh-status" id="refresh-status"></div>
+        <div class="table-wrapper">
+            <table id="queue-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Visit Type</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="queue-tbody"></tbody>
+            </table>
+        </div>
     </div>
     <script src="admin.js"></script>
 </body>

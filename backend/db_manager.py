@@ -61,7 +61,7 @@ def init_schema():
               user_id INTEGER NOT NULL,
               name TEXT NOT NULL,
               visit_type TEXT NOT NULL,
-              status TEXT NOT NULL DEFAULT 'waiting',
+                            status TEXT NOT NULL DEFAULT 'waiting',
               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
               started_at TIMESTAMP,
               completed_at TIMESTAMP,
@@ -152,6 +152,12 @@ def mark_done(entry_id: int) -> bool:
         c.execute("UPDATE queue_entries SET status='done', completed_at=? WHERE id=?", (datetime.datetime.utcnow(), entry_id))
         return c.rowcount > 0
 
+def cancel_active_for_user(user_id: int) -> bool:
+    """Cancel a user's active waiting entry (cannot cancel once serving)."""
+    with cursor_ctx() as c:
+        c.execute("UPDATE queue_entries SET status='cancelled', completed_at=? WHERE user_id=? AND status='waiting'", (datetime.datetime.utcnow(), user_id))
+        return c.rowcount > 0
+
 # Convenience for demo ------------------------------------------------------
 
 def reset_all():  # caution: clears data (for hackathon demos)
@@ -195,5 +201,5 @@ _maybe_migrate_legacy_password_column()
 
 __all__ = [
     'create_user','get_user_by_username','verify_password','get_user','join_queue','get_position',
-    'list_queue','next_patient','mark_done','user_in_active_queue','reset_all'
+    'list_queue','next_patient','mark_done','user_in_active_queue','reset_all','cancel_active_for_user'
 ]
