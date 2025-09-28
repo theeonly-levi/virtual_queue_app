@@ -1,19 +1,71 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Patient Registration</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Virtual Queue | Patient</title>
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <h1>Virtual Queue</h1>
-    <form id="registrationForm">
-        <label for="name">Name:</label>
-        <input type="text" id="name" required>
-        <label for="visit_type">Visit Type:</label>
-        <input type="text" id="visit_type" required>
-        <button type="submit">Register</button>
-    </form>
-    <div id="queueStatus"></div>
-    <script src="queue_status.js"></script>
+    <header class="site-head"><h1>Virtual Queue</h1></header>
+
+    <main class="container" id="appRoot" aria-live="polite">
+        <!-- Auth Card -->
+        <section id="authCard" class="card">
+            <div class="tabs" role="tablist" aria-label="Authentication">
+                <button class="tab active" id="tab-login" aria-controls="loginForm" aria-selected="true" role="tab">Login</button>
+                <button class="tab" id="tab-register" aria-controls="registerForm" aria-selected="false" role="tab">Register</button>
+            </div>
+            <form id="loginForm" class="panel" role="tabpanel" aria-labelledby="tab-login" autocomplete="on">
+                <div class="field"><label for="login_username">Username</label><input id="login_username" required autocomplete="username" /></div>
+                <div class="field"><label for="login_password">Password</label><input id="login_password" type="password" required autocomplete="current-password" /></div>
+                <div class="error" id="loginError"></div>
+                <button type="submit" class="btn primary stretch">Sign In</button>
+            </form>
+            <form id="registerForm" class="panel hidden" role="tabpanel" aria-labelledby="tab-register" autocomplete="on">
+                <div class="field"><label for="reg_username">Username</label><input id="reg_username" required /></div>
+                <div class="field"><label for="reg_password">Password</label><input id="reg_password" type="password" minlength="6" required /></div>
+                <div class="field"><label for="reg_password2">Confirm Password</label><input id="reg_password2" type="password" minlength="6" required /></div>
+                <div class="split">
+                    <div class="field"><label for="reg_name">Display Name</label><input id="reg_name" placeholder="Jane Doe" /></div>
+                    <div class="field"><label for="reg_visit_type">Visit Type</label><input id="reg_visit_type" placeholder="Consultation" /></div>
+                </div>
+                <label class="check"><input type="checkbox" id="reg_auto_join" /> Join queue immediately</label>
+                <div class="error" id="registerError"></div>
+                <button type="submit" class="btn primary stretch">Create Account</button>
+            </form>
+        </section>
+
+        <!-- Queue Interaction -->
+        <section id="queueSection" class="card hidden">
+            <header class="section-head">
+                <h2>Your Ticket</h2>
+                <button id="logoutBtn" class="btn ghost small" type="button">Logout</button>
+            </header>
+            <div id="ticketBox" class="ticket-box">
+                <p class="empty" id="ticketEmpty">You are not in the queue yet.</p>
+                <div id="ticketActive" class="hidden">
+                    <p><strong>Status:</strong> <span id="ticketStatus">waiting</span></p>
+                    <p><strong>Your Position:</strong> <span id="ticketPosition">-</span></p>
+                    <p class="muted" id="etaLine" hidden>Approx wait: <span id="etaValue"></span></p>
+                </div>
+            </div>
+            <form id="joinForm" class="inline-form">
+                <div class="field">
+                    <label for="join_visit_type">Visit Type</label>
+                    <input id="join_visit_type" placeholder="Consultation" required />
+                </div>
+                <button type="submit" class="btn secondary">Get Ticket</button>
+            </form>
+            <div class="actions-row">
+                <button id="refreshBtn" class="btn outline" type="button">Refresh Status</button>
+                <button id="leaveBtn" class="btn danger ghost" type="button" disabled>Leave Queue (todo)</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-foot">&copy; <span id="year"></span> Virtual Queue</footer>
+
+    <script src="queue_status.js" defer></script>
 </body>
 </html>
