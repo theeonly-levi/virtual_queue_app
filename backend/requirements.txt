@@ -13,5 +13,8 @@ python-dotenv
 pandas
 pytest
 gTTS
+playsound
+bcrypt
+PyJWT
 openai
 pyfcm

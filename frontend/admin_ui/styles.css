@@ -94,9 +94,101 @@ button[type="submit"]:hover {
     text-decoration: underline;
 }
 
-/* Queue List (placeholder) */
-#queueList {
-    margin-top: 50px;
-    width: 100%;
+
+/* Queue Tile */
+.queue-tile {
+    background: linear-gradient(90deg, #3498db 60%, #6dd5fa 100%);
+    color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 4px 16px rgba(52, 152, 219, 0.15);
+    padding: 30px 40px;
+    margin: 30px auto 20px auto;
+    max-width: 350px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.tile-label {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    display: block;
+}
+.tile-number {
+    font-size: 48px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-top: 5px;
+    display: block;
+}
+
+/* Banner for each individual */
+.queue-banner {
+    background: linear-gradient(90deg, #f8ffae 0%, #43c6ac 100%);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(67, 198, 172, 0.12);
+    margin: 18px auto;
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
     max-width: 600px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    animation: fadeInUp 0.7s;
+}
+.queue-banner:hover {
+    transform: scale(1.03);
+    box-shadow: 0 6px 20px rgba(67, 198, 172, 0.18);
+}
+.banner-index {
+    font-size: 22px;
+    font-weight: bold;
+    color: #3498db;
+    margin-right: 22px;
+    min-width: 40px;
+    text-align: center;
+}
+.banner-info {
+    display: flex;
+    flex-direction: column;
+}
+.banner-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+.banner-reason {
+    font-size: 15px;
+    color: #34495e;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* Animation Effects */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.animate-banner {
+    animation: fadeInUp 0.7s;
+}
+.animate-tile {
+    animation: fadeInUp 0.8s;
+}
+
+/* Queue List container */
+#queueList {
+    margin-top: 30px;
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
