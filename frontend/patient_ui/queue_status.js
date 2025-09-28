@@ -167,3 +167,4 @@ function showQueueDashboard() {
     // Display it
     queueList.innerHTML = html;
 }
+})
