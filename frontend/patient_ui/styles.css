@@ -76,22 +76,61 @@ button[type="submit"]:hover {
     background-color: #2980b9;
 }
 
-/* Register Link */
-#loginForm span {
-    display: block;
-    margin-top: 15px;
-    text-align: center;
-    font-size: 14px;
+/* Input Group */
+.input-group {
+    margin-bottom: 18px;
+}
+.input-group label {
+    margin-bottom: 6px;
+    font-size: 15px;
+    color: #34495e;
+}
+.input-group input {
+    font-size: 16px;
 }
 
-#loginForm a {
-    color: #3498db;
-    text-decoration: none;
+/* Login Button */
+.login-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(90deg, #43c6ac 0%, #3498db 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 18px;
     font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.12);
+    transition: background 0.3s, box-shadow 0.3s;
+}
+.login-btn:hover {
+    background: linear-gradient(90deg, #3498db 0%, #43c6ac 100%);
+    box-shadow: 0 4px 16px rgba(52, 152, 219, 0.18);
 }
 
-#loginForm a:hover {
-    text-decoration: underline;
+/* Register Section */
+.register-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+    font-size: 15px;
+}
+.register-btn {
+    background: #fff;
+    color: #3498db;
+    border: 2px solid #3498db;
+    border-radius: 6px;
+    padding: 6px 18px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background 0.3s, color 0.3s;
+}
+.register-btn:hover {
+    background: #3498db;
+    color: #fff;
 }
 
 /* Queue List (placeholder) */
