@@ -41,8 +41,18 @@ app = Flask(__name__)
 # -------------------------------
 @app.before_request
 def enforce_https():
-    if not request.is_secure and app.env != "development":
-        return redirect(request.url.replace("http://", "https://"), code=301)
+    """Redirect plain HTTP to HTTPS when behind a proxy (Render, etc.).
+
+    Uses X-Forwarded-Proto so request.is_secure isn't solely relied upon.
+    Skips in development mode.
+    """
+    if app.env == "development":
+        return  # allow local http
+    xf_proto = request.headers.get("X-Forwarded-Proto", "http")
+    if xf_proto != "https":
+        # Build https version
+        secure_url = request.url.replace("http://", "https://", 1)
+        return redirect(secure_url, code=301)
 
 @app.after_request
 def set_security_headers(response):
@@ -64,22 +74,12 @@ def set_security_headers(response):
     return response
 
 # -------------------------------
-# Database setup
+# Database setup (delegated to db_manager)
 # -------------------------------
-DB_PATH = "database.db"
-
-def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users (
-                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                 username TEXT UNIQUE,
-                 password TEXT
-                 )''')
-    conn.commit()
-    conn.close()
-
-init_db()
+# Legacy inline user table initialization removed. db_manager.py now owns the
+# authoritative user + queue schema. If a separate file created an older
+# 'users' table with plaintext passwords, db_manager includes a migration to
+# password_hash. Keeping this section minimal reduces duplication.
 
 # Integrate new db-backed queue + users abstraction
 from . import db_manager  # type: ignore  # noqa: E402
@@ -275,5 +275,11 @@ def queue_done(entry_id: int):
 # -------------------------------
 # Run
 # -------------------------------
+@app.route('/healthz')
+def healthz():
+    return jsonify({"status": "ok"})
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Bind to PORT if provided (Render), else default 5000
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
