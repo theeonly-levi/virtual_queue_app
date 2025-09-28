@@ -36,6 +36,29 @@ python -m backend.security  # or: gunicorn backend.wsgi:app
 ### Notes
 Two database layers currently exist (`database.py` legacy and `db_manager.py` new). Prefer `db_manager.py` for user & queue operations. Plan a consolidation pass before production hardening.
 
+## Patient UI Overview
+
+The patient interface (`frontend/patient_ui/`) provides:
+
+* Combined Login / Registration card (tabbed) hitting `/login` and `/register`.
+* Optional auto-join to queue during registration (checkbox sets `auto_join`).
+* Queue ticket view hitting `/queue/me` every few seconds (manual refresh button also available).
+* Join form to call `/queue/join` with a chosen visit type.
+* Medication Info Assistant (AI): toggle panel that posts questions to `/ai/advice` (must be authenticated). The backend module applies safety filters (no dosing / diagnosis) and appends a disclaimer.
+
+To point the frontend at a different backend origin, set a global before scripts:
+```html
+<script>window.API_BASE = 'https://your-backend.example.com';</script>
+<script src="queue_status.js" defer></script>
+```
+
+### Planned Enhancements (not yet implemented)
+* Leave queue endpoint & button enablement
+* LocalStorage token persistence for session resume
+* Display of historical AI advice turns
+* Urgency-based priority highlighting (integrate `urgency_detector`)
+
+
 # Virtual Queue App
 
 MVP virtual clinic queue system featuring:

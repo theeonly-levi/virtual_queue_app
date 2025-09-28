@@ -84,6 +84,7 @@ def set_security_headers(response):
 # Integrate new db-backed queue + users abstraction
 from . import db_manager  # type: ignore  # noqa: E402
 from .queue_manager import queue_manager  # noqa: E402
+from . import ai_advice  # noqa: E402
 
 def seed_admin():
     adm = db_manager.get_user_by_username('admin')
@@ -271,6 +272,25 @@ def queue_done(entry_id: int):
     if not ok:
         return jsonify({'error': 'Not found or already done'}), 404
     return jsonify({'message': 'Marked done'})
+
+# -------------------------------
+# AI Advice (Medication info assistant)
+# -------------------------------
+@app.route('/ai/advice', methods=['POST'])
+@login_required
+def ai_advice_endpoint():
+    data = request.get_json(force=True, silent=True) or {}
+    prompt = (data.get('question') or data.get('q') or '').strip()
+    if not prompt:
+        return jsonify({'error': 'Missing question'}), 400
+    session_id = f"user-{request.user['user_id']}"
+    result = ai_advice.handle_user_message(session_id=session_id, message=prompt)
+    return jsonify({
+        'answer': result.get('answer'),
+        'turns': result.get('turns'),
+        'llm_used': result.get('llm_used'),
+        'session_id': result.get('session_id')
+    })
 
 # -------------------------------
 # Run
