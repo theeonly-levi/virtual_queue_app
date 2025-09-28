@@ -1,8 +1,8 @@
-from __future__ import annotations
-from dotenv import load_dotenv  # loads .env into os.environ
+from dotenv import load_dotenv
 load_dotenv()
 
-import os, json, re, time, threading
+import os, json, re, time, threading, difflib
+from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -23,6 +23,16 @@ _MED_CACHE: Dict[str, Dict] = {}
 _SESSIONS: Dict[str, "ChatSession"] = {}
 _MAX_SESSION_TURNS = 40
 _MAX_SESSIONS_IN_MEMORY = 200
+
+_METRICS = {
+    "total_queries": 0,
+    "blocked": 0,
+    "llm_success": 0,
+    "llm_fallback": 0
+}
+_RATE_WINDOW_SECONDS = 60
+_RATE_MAX_REQUESTS = 20
+_MIN_INTERVAL_SECONDS = 0.7
 
 DISCLAIMER = (
     "Educational information only. Not medical advice. "
@@ -74,6 +84,15 @@ def _ensure_storage():
 def _normalized(name: str) -> str:
     return re.sub(r"\s+", " ", name.strip().lower())
 
+def _add_aliases(entry: Dict):
+    aliases = entry.get("aliases") or entry.get("synonyms")
+    if not aliases:
+        return
+    for a in aliases:
+        key = _normalized(a)
+        if key and key not in _MED_CACHE:
+            _MED_CACHE[key] = entry
+
 def load_medications():
     if _MED_CACHE:
         return
@@ -84,6 +103,7 @@ def load_medications():
             key = _normalized(entry.get("name", ""))
             if key:
                 _MED_CACHE[key] = entry
+                _add_aliases(entry)
     except Exception as e:
         print(f"[med-bot] load error: {e}")
 
@@ -110,6 +130,8 @@ class ChatTurn:
 class ChatSession:
     session_id: str
     turns: List[ChatTurn] = field(default_factory=list)
+    last_med_key: Optional[str] = None
+    recent_ts: deque = field(default_factory=lambda: deque(maxlen=50))
 
     def add(self, role: str, content: str):
         self.turns.append(ChatTurn(role=role, content=content))
@@ -153,8 +175,33 @@ def _find_record_in_text(text: str) -> Optional[Dict]:
     load_medications()
     low = text.lower()
     for key, rec in _MED_CACHE.items():
-        if key in low:
+        if key and key in low:
             return rec
+    return None
+
+def _resolve_followup(session: ChatSession, message: str) -> Optional[Dict]:
+    if not session.last_med_key:
+        return None
+    low = message.lower()
+    if any(p in low for p in ("it", "this medication", "this drug", "that medication")) and not _find_record_in_text(message):
+        return _MED_CACHE.get(session.last_med_key)
+    return None
+
+def _suggest_med_names(term: str, limit: int = 3) -> List[str]:
+    load_medications()
+    names = list({rec.get("name") for rec in _MED_CACHE.values() if rec.get("name")})
+    return difflib.get_close_matches(term, names, n=limit, cutoff=0.6)
+
+def _rate_limited(session: ChatSession) -> Optional[str]:
+    now = time.time()
+    if session.recent_ts:
+        while session.recent_ts and now - session.recent_ts[0] > _RATE_WINDOW_SECONDS:
+            session.recent_ts.popleft()
+        if len(session.recent_ts) >= _RATE_MAX_REQUESTS:
+            return "Rate limit: Too many requests. Please wait a moment."
+        if now - session.recent_ts[-1] < _MIN_INTERVAL_SECONDS:
+            return "Please wait a second before asking another question."
+    session.recent_ts.append(now)
     return None
 
 def _format_record_plain(rec: Dict) -> str:
@@ -194,34 +241,32 @@ def _openai_client():
         print(f"[med-bot] OpenAI init error: {e}")
         return None
 
-def _llm_answer(rec: Dict, user_question: str) -> Optional[str]:
+def _llm_answer(rec: Dict, user_question: str) -> tuple[Optional[str], bool]:
     client = _openai_client()
     if not client:
-        return None
+        return None, False
     facts = _build_structured_context(rec)
     user_content = f"User question: {user_question}\nStructured facts JSON: {facts}\nGenerate answer."
+    model_pref = os.environ.get("MED_CHAT_MODEL", "gpt-4.1-mini")
     try:
-        # Using Responses API (preferred newer endpoint). Fallback to Chat if needed.
         if hasattr(client, "responses"):
             resp = client.responses.create(
-                model=os.environ.get("MED_CHAT_MODEL", "gpt-4.1-mini"),
+                model=model_pref,
                 input=[
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": user_content}
                 ],
-                max_output_tokens=400
+                max_output_tokens=400,
+                temperature=0.2
             )
-            # Extract text
-            for item in resp.output:
-                if item.type == "output_text":
-                    text = item.text.strip()
-                    if DISCLAIMER not in text:
-                        text += "\n" + DISCLAIMER
-                    return text
-            return None
-        else:  # legacy
+            text_segments = []
+            for item in getattr(resp, "output", []):
+                if getattr(item, "type", None) == "output_text":
+                    text_segments.append(item.text)
+            text = " ".join(text_segments).strip()
+        else:
             chat = client.chat.completions.create(
-                model=os.environ.get("MED_CHAT_MODEL", "gpt-4o-mini"),
+                model=model_pref,
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": user_content}
@@ -230,43 +275,73 @@ def _llm_answer(rec: Dict, user_question: str) -> Optional[str]:
                 temperature=0.2
             )
             text = chat.choices[0].message.content.strip()
-            if DISCLAIMER not in text:
-                text += "\n" + DISCLAIMER
-            return text
+        if not text:
+            return None, False
+        if DISCLAIMER not in text:
+            text += "\n" + DISCLAIMER
+        return text, True
     except Exception as e:
         print(f"[med-bot] LLM error: {e}")
-        return None
+        return None, False
 
 def handle_user_message(session_id: str, message: str) -> Dict:
+    _METRICS["total_queries"] += 1
     session = get_session(session_id)
     session.add("user", message)
 
-    if _is_blocked(message):
-        answer = "I cannot provide dosing, diagnostic, or emergency guidance. " + DISCLAIMER
-    else:
-        explicit = re.match(r"^(?:info|med)\s*:\s*(.+)$", message.strip(), re.IGNORECASE)
-        rec = None
-        if explicit:
-            load_medications()
-            rec = _MED_CACHE.get(_normalized(explicit.group(1)))
-        if not rec:
-            rec = _find_record_in_text(message)
+    # Rate limiting
+    rl_msg = _rate_limited(session)
+    if rl_msg:
+        answer = rl_msg + " " + DISCLAIMER
+        session.add("bot", answer)
+        _persist_sessions()
+        return {"session_id": session_id, "answer": answer, "turns": len(session.turns), "llm_used": False}
 
-        if rec:
-            # Try LLM if enabled
-            llm_out = _llm_answer(rec, message) if _llm_enabled() else None
-            answer = llm_out or _format_record_plain(rec)
+    if _is_blocked(message):
+        _METRICS["blocked"] += 1
+        answer = "I cannot provide dosing, diagnostic, or emergency guidance. " + DISCLAIMER
+        session.add("bot", answer)
+        _persist_sessions()
+        return {"session_id": session_id, "answer": answer, "turns": len(session.turns), "llm_used": False}
+
+    explicit = re.match(r"^(?:info|med)\s*:\s*(.+)$", message.strip(), re.IGNORECASE)
+    rec = None
+    if explicit:
+        load_medications()
+        rec = _MED_CACHE.get(_normalized(explicit.group(1)))
+    if not rec:
+        rec = _find_record_in_text(message)
+    if not rec:
+        rec = _resolve_followup(session, message)
+
+    llm_used = False
+    if rec:
+        session.last_med_key = _normalized(rec.get("name", ""))
+        llm_text, success = _llm_answer(rec, message) if _llm_enabled() else (None, False)
+        if success:
+            _METRICS["llm_success"] += 1
+            answer = llm_text
+            llm_used = True
         else:
-            answer = "Medication not found locally. Add it first. " + DISCLAIMER
+            if _llm_enabled():
+                _METRICS["llm_fallback"] += 1
+            answer = _format_record_plain(rec)
+    else:
+        tokens = re.findall(r"[A-Za-z][A-Za-z0-9_-]{2,}", message)
+        suggestion_text = ""
+        if tokens:
+            cand = tokens[-1].lower()
+            suggestions = _suggest_med_names(cand)
+            if suggestions:
+                suggestion_text = f" Did you mean: {', '.join(suggestions)}?"
+        answer = "Medication not found locally." + suggestion_text + " " + DISCLAIMER
 
     session.add("bot", answer)
     _persist_sessions()
-    return {
-        "session_id": session_id,
-        "answer": answer,
-        "turns": len(session.turns),
-        "llm_used": _llm_enabled()
-    }
+    resp = {"session_id": session_id, "answer": answer, "turns": len(session.turns), "llm_used": llm_used}
+    if os.environ.get("MED_CHAT_DEBUG") == "1":
+        resp["metrics"] = _METRICS.copy()
+    return resp
 
 # Helper to add med programmatically
 def add_medication(

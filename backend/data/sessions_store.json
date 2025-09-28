@@ -39,6 +39,110 @@
       "role": "bot",
       "content": "I cannot provide dosing, diagnostic, or emergency guidance. Educational information only. Not medical advice. Consult a licensed healthcare professional. Not for emergencies.",
       "ts": 1759015985.6982234
+    },
+    {
+      "role": "user",
+      "content": "Tell me about ibuprofen",
+      "ts": 1759018276.821567
+    },
+    {
+      "role": "bot",
+      "content": "Ibuprofen is a nonsteroidal anti-inflammatory drug (NSAID) commonly used for pain relief, reducing inflammation, and lowering fever. Common side effects include nausea, heartburn, and dizziness. Serious warnings associated with ibuprofen involve the risk of gastrointestinal bleeding and possible cardiovascular risks. It is important to use caution when taking ibuprofen with anticoagulants or other NSAIDs due to potential interactions. \n\nDISCLAIMER: This information is not a substitute for professional medical advice. Always consult a healthcare provider for diagnosis and treatment.\nEducational information only. Not medical advice. Consult a licensed healthcare professional. Not for emergencies.",
+      "ts": 1759018279.556661
+    },
+    {
+      "role": "user",
+      "content": "What dosage should I take?",
+      "ts": 1759018279.5573647
+    },
+    {
+      "role": "bot",
+      "content": "I cannot provide dosing, diagnostic, or emergency guidance. Educational information only. Not medical advice. Consult a licensed healthcare professional. Not for emergencies.",
+      "ts": 1759018279.5573914
+    }
+  ],
+  "t1": [
+    {
+      "role": "user",
+      "content": "Tell me about ibuprofen",
+      "ts": 1759018046.088449
+    },
+    {
+      "role": "bot",
+      "content": "Ibuprofen is a nonsteroidal anti-inflammatory drug (NSAID) commonly used for pain relief, reducing inflammation, and lowering fever. Common side effects include nausea, heartburn, and dizziness. Serious warnings include the risk of gastrointestinal bleeding and possible cardiovascular risks. It should be used with caution when taken with anticoagulants or other NSAIDs due to potential interactions. \n\nDISCLAIMER: This information is educational and not a substitute for professional medical advice. Always consult a healthcare provider for diagnosis and treatment.\nEducational information only. Not medical advice. Consult a licensed healthcare professional. Not for emergencies.",
+      "ts": 1759018048.8227515
+    },
+    {
+      "role": "user",
+      "content": "What are its side effects?",
+      "ts": 1759018048.823207
+    },
+    {
+      "role": "bot",
+      "content": "Ibuprofen, a nonsteroidal anti-inflammatory drug (NSAID), commonly causes side effects such as nausea, heartburn, and dizziness. Serious warnings include the risk of gastrointestinal bleeding and possible cardiovascular risks. It is important to use caution when taking ibuprofen with anticoagulants or other NSAIDs due to potential interactions. For more detailed information or concerns, consult a healthcare professional. \n\nDISCLAIMER: This response is for informational purposes only and is not a substitute for professional medical advice.\nEducational information only. Not medical advice. Consult a licensed healthcare professional. Not for emergencies.",
+      "ts": 1759018051.5492163
+    },
+    {
+      "role": "user",
+      "content": "Ibuprfen details",
+      "ts": 1759018051.552817
+    },
+    {
+      "role": "bot",
+      "content": "Medication not found locally. Educational information only. Not medical advice. Consult a licensed healthcare professional. Not for emergencies.",
+      "ts": 1759018051.5531151
+    }
+  ],
+  "sess": [
+    {
+      "role": "user",
+      "content": "Tell me about ibuprofen",
+      "ts": 1759018072.252842
+    },
+    {
+      "role": "bot",
+      "content": "Ibuprofen is a nonsteroidal anti-inflammatory drug (NSAID) commonly used for pain relief, reducing inflammation, and lowering fever. Common side effects include nausea, heartburn, and dizziness. Serious warnings include the risk of gastrointestinal bleeding and possible cardiovascular risks. Caution is advised when using ibuprofen with anticoagulants or other NSAIDs due to potential interactions. \n\nDISCLAIMER: This information is educational and not a substitute for professional medical advice. Always consult a healthcare provider for diagnosis and treatment.\nEducational information only. Not medical advice. Consult a licensed healthcare professional. Not for emergencies.",
+      "ts": 1759018075.0176497
+    },
+    {
+      "role": "user",
+      "content": "What are its side effects?",
+      "ts": 1759018075.0182111
+    },
+    {
+      "role": "bot",
+      "content": "Ibuprofen, a nonsteroidal anti-inflammatory drug (NSAID), commonly causes side effects such as nausea, heartburn, and dizziness. Serious warnings include the risk of gastrointestinal bleeding and potential cardiovascular risks. It is important to use caution when taking ibuprofen with anticoagulants or other NSAIDs due to possible interactions. For more detailed information or concerns, consult a healthcare professional. \n\nDISCLAIMER: This information is not a substitute for professional medical advice. Always follow your healthcare provider's instructions.\nEducational information only. Not medical advice. Consult a licensed healthcare professional. Not for emergencies.",
+      "ts": 1759018078.1031892
+    },
+    {
+      "role": "user",
+      "content": "Ibuprfen details",
+      "ts": 1759018078.1037736
+    },
+    {
+      "role": "bot",
+      "content": "Medication not found locally. Educational information only. Not medical advice. Consult a licensed healthcare professional. Not for emergencies.",
+      "ts": 1759018078.104074
+    },
+    {
+      "role": "user",
+      "content": "info: Paracetamol",
+      "ts": 1759018078.1070724
+    },
+    {
+      "role": "bot",
+      "content": "Please wait a second before asking another question. Educational information only. Not medical advice. Consult a licensed healthcare professional. Not for emergencies.",
+      "ts": 1759018078.107079
+    },
+    {
+      "role": "user",
+      "content": "What dosage should I take?",
+      "ts": 1759018078.1074598
+    },
+    {
+      "role": "bot",
+      "content": "Please wait a second before asking another question. Educational information only. Not medical advice. Consult a licensed healthcare professional. Not for emergencies.",
+      "ts": 1759018078.1074665
     }
   ]
 }
