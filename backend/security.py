@@ -273,6 +273,16 @@ def queue_done(entry_id: int):
         return jsonify({'error': 'Not found or already done'}), 404
     return jsonify({'message': 'Marked done'})
 
+@app.route('/queue/leave', methods=['POST'])
+@login_required
+def queue_leave():
+    user_id = request.user['user_id']
+    from . import db_manager as _dbm  # local import to avoid circular on module load
+    ok = _dbm.cancel_active_for_user(user_id)
+    if not ok:
+        return jsonify({'error': 'No waiting entry to cancel'}), 409
+    return jsonify({'message': 'Left queue'})
+
 # -------------------------------
 # AI Advice (Medication info assistant)
 # -------------------------------

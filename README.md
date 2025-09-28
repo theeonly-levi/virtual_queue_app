@@ -46,6 +46,11 @@ The patient interface (`frontend/patient_ui/`) provides:
 * Join form to call `/queue/join` with a chosen visit type.
 * Medication Info Assistant (AI): toggle panel that posts questions to `/ai/advice` (must be authenticated). The backend module applies safety filters (no dosing / diagnosis) and appends a disclaimer.
 
+### Recent Additions
+* Persistent patient JWT (localStorage key: `patient_jwt_token`).
+* `/queue/leave` endpoint to cancel a waiting ticket (cannot cancel once serving).
+* Advice panel now keeps a rolling transcript (last ~30 Q/A turns stored client-side only).
+
 To point the frontend at a different backend origin, set a global before scripts:
 ```html
 <script>window.API_BASE = 'https://your-backend.example.com';</script>

@@ -12,6 +12,9 @@
     const API_BASE = window.API_BASE || '';
     let authToken = null;
     let pollTimer = null;
+    const TOKEN_KEY = 'patient_jwt_token';
+    const ADVICE_HISTORY_LIMIT = 30;
+    const adviceHistory = [];
 
     // Elements (selectors align with index.html markup)
     const loginTabBtn = document.getElementById('tab-login');
@@ -77,6 +80,7 @@
 
     function setAuth(token){
         authToken = token;
+        try { localStorage.setItem(TOKEN_KEY, token); } catch(_){}
         authCard.classList.add('hidden');
         queueSection.classList.remove('hidden');
         pollStatus();
@@ -84,6 +88,7 @@
 
     function logout(){
         authToken = null;
+        try { localStorage.removeItem(TOKEN_KEY); } catch(_){}
         clearInterval(pollTimer); pollTimer=null;
         resetTicket();
         queueSection.classList.add('hidden');
@@ -181,7 +186,18 @@
         }
     });
 
-    leaveBtn?.addEventListener('click', ()=> alert('Leave queue not implemented on server yet.'));
+    leaveBtn?.addEventListener('click', async ()=> {
+        if(!authToken) return;
+        leaveBtn.disabled = true;
+        try {
+            const resp = await api('/queue/leave', { method:'POST' });
+            await pollStatus();
+        } catch(err){
+            alert('Leave failed: ' + err.message);
+        } finally {
+            leaveBtn.disabled = false;
+        }
+    });
 
     // Manual refresh
     refreshBtn?.addEventListener('click', ()=> pollStatus());
@@ -201,12 +217,27 @@
         adviceResult.textContent = 'Loading...';
         try {
             const data = await api('/ai/advice', { method:'POST', body: JSON.stringify({ question: q }) });
-            adviceResult.textContent = data.answer;
+            adviceHistory.push({ q, a: data.answer });
+            if(adviceHistory.length > ADVICE_HISTORY_LIMIT) adviceHistory.shift();
+            adviceResult.textContent = adviceHistory.map(turn => `Q: ${turn.q}\nA: ${turn.a}\n`).join('\n');
         } catch(err){
             adviceResult.textContent = 'Error: ' + err.message;
         }
     });
 
     // Attempt token restore (POC: none stored) - could add localStorage logic
+    // Attempt token restore
+    try {
+        const saved = localStorage.getItem(TOKEN_KEY);
+        if(saved){
+            authToken = saved;
+            // Probe queue; if fails, drop token
+            api('/queue/me').then(()=>{
+                authCard.classList.add('hidden');
+                queueSection.classList.remove('hidden');
+                pollStatus();
+            }).catch(()=>{ localStorage.removeItem(TOKEN_KEY); authToken=null;});
+        }
+    } catch(_){}
     switchTab('login');
 })();
