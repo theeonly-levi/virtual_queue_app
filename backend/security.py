@@ -295,12 +295,36 @@ def ai_advice_endpoint():
         return jsonify({'error': 'Missing question'}), 400
     session_id = f"user-{request.user['user_id']}"
     result = ai_advice.handle_user_message(session_id=session_id, message=prompt)
+    # Persist interaction
+    try:
+        from . import db_manager as _dbm
+        _dbm.log_ai_advice(
+            user_id=request.user['user_id'],
+            question=prompt,
+            answer=result.get('answer') or '',
+            llm_used=bool(result.get('llm_used')),
+            model=result.get('model_used')
+        )
+    except Exception as e:
+        print('[ai-advice] log failed', e)
     return jsonify({
         'answer': result.get('answer'),
         'turns': result.get('turns'),
         'llm_used': result.get('llm_used'),
+        'model_used': result.get('model_used'),
         'session_id': result.get('session_id')
     })
+
+@app.route('/ai/history', methods=['GET'])
+@login_required
+def ai_history():
+    try:
+        limit = int(request.args.get('limit', '25'))
+    except ValueError:
+        limit = 25
+    from . import db_manager as _dbm
+    history = _dbm.get_ai_history(request.user['user_id'], limit=limit)
+    return jsonify({'items': history, 'count': len(history)})
 
 # -------------------------------
 # Run

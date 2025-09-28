@@ -17,11 +17,13 @@ Queue statuses: waiting -> serving -> done (or skipped/cancelled if extended lat
 """
 from __future__ import annotations
 
-import sqlite3, bcrypt, datetime, contextlib
+import sqlite3, bcrypt, datetime, contextlib, os
 from typing import Optional, Dict, Any, List, Tuple
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent / "database.db"
+# Database path can be overridden via environment variable DB_PATH to consolidate
+# persistence across modules (recommended). Falls back to local file.
+DB_PATH = Path(os.environ.get("DB_PATH") or (Path(__file__).parent / "database.db"))
 
 # --- Connection Helpers ----------------------------------------------------
 _conn: Optional[sqlite3.Connection] = None
@@ -29,8 +31,17 @@ _conn: Optional[sqlite3.Connection] = None
 def get_conn() -> sqlite3.Connection:
     global _conn
     if _conn is None:
+        first_init = not DB_PATH.exists()
         _conn = sqlite3.connect(DB_PATH, check_same_thread=False)
         _conn.row_factory = sqlite3.Row
+        # Enable WAL for better concurrent read/write performance (safe for most deployments)
+        try:
+            with _conn:  # executes in transaction
+                _conn.execute("PRAGMA journal_mode=WAL")
+                _conn.execute("PRAGMA synchronous=NORMAL")
+                _conn.execute("PRAGMA foreign_keys=ON")
+        except Exception as e:
+            print(f"[db] Pragmas set failed: {e}")
     return _conn
 
 @contextlib.contextmanager
@@ -46,29 +57,43 @@ def cursor_ctx():
 
 def init_schema():
     with cursor_ctx() as c:
-        c.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              username TEXT UNIQUE NOT NULL,
-              password_hash TEXT NOT NULL,
-              role TEXT DEFAULT 'patient',
-              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        c.execute("""
-            CREATE TABLE IF NOT EXISTS queue_entries (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              user_id INTEGER NOT NULL,
-              name TEXT NOT NULL,
-              visit_type TEXT NOT NULL,
+                c.execute("""
+                        CREATE TABLE IF NOT EXISTS users (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            username TEXT UNIQUE NOT NULL,
+                            password_hash TEXT NOT NULL,
+                            role TEXT DEFAULT 'patient',
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        )
+                """)
+                c.execute("""
+                        CREATE TABLE IF NOT EXISTS queue_entries (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER NOT NULL,
+                            name TEXT NOT NULL,
+                            visit_type TEXT NOT NULL,
                             status TEXT NOT NULL DEFAULT 'waiting',
-              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-              started_at TIMESTAMP,
-              completed_at TIMESTAMP,
-              FOREIGN KEY(user_id) REFERENCES users(id)
-            )
-        """)
-        c.execute("CREATE INDEX IF NOT EXISTS idx_queue_status_created ON queue_entries(status, created_at)")
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            started_at TIMESTAMP,
+                            completed_at TIMESTAMP,
+                            FOREIGN KEY(user_id) REFERENCES users(id)
+                        )
+                """)
+                c.execute("CREATE INDEX IF NOT EXISTS idx_queue_status_created ON queue_entries(status, created_at)")
+                # AI advice logs: store each Q/A for audit & future analytics
+                c.execute("""
+                        CREATE TABLE IF NOT EXISTS ai_advice_logs (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER NOT NULL,
+                            question TEXT NOT NULL,
+                            answer TEXT NOT NULL,
+                            llm_used INTEGER NOT NULL DEFAULT 0,
+                            model TEXT,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY(user_id) REFERENCES users(id)
+                        )
+                """)
+                c.execute("CREATE INDEX IF NOT EXISTS idx_advice_user_time ON ai_advice_logs(user_id, created_at DESC)")
 
 # --- User Management -------------------------------------------------------
 
@@ -157,6 +182,25 @@ def cancel_active_for_user(user_id: int) -> bool:
     with cursor_ctx() as c:
         c.execute("UPDATE queue_entries SET status='cancelled', completed_at=? WHERE user_id=? AND status='waiting'", (datetime.datetime.utcnow(), user_id))
         return c.rowcount > 0
+
+# --- AI Advice Persistence -------------------------------------------------
+
+def log_ai_advice(user_id: int, question: str, answer: str, llm_used: bool, model: str | None):
+    with cursor_ctx() as c:
+        c.execute(
+            "INSERT INTO ai_advice_logs(user_id, question, answer, llm_used, model) VALUES(?,?,?,?,?)",
+            (user_id, question, answer, 1 if llm_used else 0, model)
+        )
+        return c.lastrowid
+
+def get_ai_history(user_id: int, limit: int = 25) -> list[dict]:
+    limit = max(1, min(limit, 200))  # cap
+    with cursor_ctx() as c:
+        c.execute(
+            "SELECT id, question, answer, llm_used, model, created_at FROM ai_advice_logs WHERE user_id=? ORDER BY id DESC LIMIT ?",
+            (user_id, limit)
+        )
+        return [dict(r) for r in c.fetchall()]
 
 # Convenience for demo ------------------------------------------------------
 

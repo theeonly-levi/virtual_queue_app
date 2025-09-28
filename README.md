@@ -50,6 +50,10 @@ The patient interface (`frontend/patient_ui/`) provides:
 * Persistent patient JWT (localStorage key: `patient_jwt_token`).
 * `/queue/leave` endpoint to cancel a waiting ticket (cannot cancel once serving).
 * Advice panel now keeps a rolling transcript (last ~30 Q/A turns stored client-side only).
+* Persistent AI Advice logging (`ai_advice_logs` table) capturing question, answer, llm_used, model.
+* `/ai/history` endpoint (GET, auth) returns recent advice interactions for the authenticated user.
+* Unified database path support via `DB_PATH` env and WAL mode for improved SQLite concurrency.
+* OpenAI model usage now recorded when LLM path is taken.
 
 To point the frontend at a different backend origin, set a global before scripts:
 ```html
@@ -62,6 +66,55 @@ To point the frontend at a different backend origin, set a global before scripts
 * LocalStorage token persistence for session resume
 * Display of historical AI advice turns
 * Urgency-based priority highlighting (integrate `urgency_detector`)
+
+## AI Advice Persistence & OpenAI Integration
+
+The medication info assistant stores interactions in `ai_advice_logs` (created automatically):
+
+Columns: `id, user_id, question, answer, llm_used (0/1), model, created_at`.
+
+### Enabling OpenAI
+Set the following environment variables:
+
+Required to activate LLM path (otherwise local structured fallback only):
+* `OPENAI_API_KEY` – Your OpenAI API key.
+* `MED_CHAT_USE_LLM=1` – Feature flag to allow LLM requests.
+
+Optional tweaks:
+* `MED_CHAT_MODEL` (default: `gpt-4.1-mini`) – Model name.
+* `MED_CHAT_DEBUG=1` – Include internal metrics in `/ai/advice` response (debug only).
+
+Safety rules enforced server-side block dosing, diagnosis, emergencies. Fallback answers use curated structured medication JSON.
+
+### Fetching User History
+`GET /ai/history?limit=25` (Authorization: Bearer <token>)
+Returns: `{ "items": [ { id, question, answer, llm_used, model, created_at }, ...], count }`
+
+### Database Consolidation
+Set `DB_PATH` env var (e.g. `/data/app.db`) to use a single SQLite database for all tables. WAL mode and `foreign_keys=ON` are applied at connection time in `db_manager.py`.
+
+If deploying on Render with a persistent disk mounted at `/data`:
+```
+DB_PATH=/data/app.db
+```
+
+## Minimal Environment Variables
+
+For basic operation (no LLM):
+```
+SECRET_KEY=change-me
+DB_PATH=/data/app.db            # if using a mounted volume
+MED_CHAT_USE_LLM=0              # explicit off (default off if unset)
+```
+
+For OpenAI-enabled advice:
+```
+SECRET_KEY=change-me
+DB_PATH=/data/app.db
+OPENAI_API_KEY=sk-...
+MED_CHAT_USE_LLM=1
+MED_CHAT_MODEL=gpt-4.1-mini     # optional
+```
 
 
 # Virtual Queue App

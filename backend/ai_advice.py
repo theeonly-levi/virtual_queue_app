@@ -315,6 +315,7 @@ def handle_user_message(session_id: str, message: str) -> Dict:
         rec = _resolve_followup(session, message)
 
     llm_used = False
+    model_used: Optional[str] = None
     if rec:
         session.last_med_key = _normalized(rec.get("name", ""))
         llm_text, success = _llm_answer(rec, message) if _llm_enabled() else (None, False)
@@ -322,6 +323,7 @@ def handle_user_message(session_id: str, message: str) -> Dict:
             _METRICS["llm_success"] += 1
             answer = llm_text
             llm_used = True
+            model_used = os.environ.get("MED_CHAT_MODEL", "gpt-4.1-mini")
         else:
             if _llm_enabled():
                 _METRICS["llm_fallback"] += 1
@@ -338,7 +340,7 @@ def handle_user_message(session_id: str, message: str) -> Dict:
 
     session.add("bot", answer)
     _persist_sessions()
-    resp = {"session_id": session_id, "answer": answer, "turns": len(session.turns), "llm_used": llm_used}
+    resp = {"session_id": session_id, "answer": answer, "turns": len(session.turns), "llm_used": llm_used, "model_used": model_used}
     if os.environ.get("MED_CHAT_DEBUG") == "1":
         resp["metrics"] = _METRICS.copy()
     return resp
