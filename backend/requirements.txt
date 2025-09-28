@@ -13,5 +13,5 @@ python-dotenv
 pandas
 pytest
 gTTS
-playsound
 openai
+pyfcm
