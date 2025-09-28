@@ -1,55 +1,62 @@
+
 document.addEventListener("DOMContentLoaded", function () {
     const loginForm = document.getElementById("loginForm");
+    const loginSection = document.getElementById("login-section");
+    const dashboardContent = document.getElementById("dashboard-content");
+    const loginError = document.getElementById("login-error");
+    const queueCount = document.getElementById("queue-count");
+    const queueList = document.getElementById("queue-list");
 
     loginForm.addEventListener("submit", function (event) {
-        event.preventDefault(); // Prevent default form submission
-
+        event.preventDefault();
         const username = document.getElementById("username").value.trim();
         const password = document.getElementById("password").value.trim();
 
-        // Simulated user credentials (in real apps, validate via server/API)
+        // Simulated credentials (replace with server-side validation in production)
         const validCredentials = {
             username: "admin",
             password: "admin123"
         };
 
-        // Check credentials
         if (username === validCredentials.username && password === validCredentials.password) {
-            // Simulate successful login
-            alert("Login successful!");
-
-            // Redirect or update UI
-            showQueueDashboard(); // You can replace this with window.location = 'dashboard.html' if needed
+            loginSection.style.display = "none";
+            dashboardContent.style.display = "block";
+            loginError.style.display = "none";
+            showQueueDashboard();
         } else {
-            // Show error
-            alert("Invalid username or password.");
+            loginError.textContent = "Invalid username or password.";
+            loginError.style.display = "block";
         }
     });
+
+    function showQueueDashboard() {
+        // Simulated queue data (replace with API call in production)
+        const queue = [
+            { name: "Mashbeats", visit_reason: "Consultation" },
+            { name: "Levi", visit_reason: "Prescription renewal" },
+            { name: "Tumi", visit_reason: "Follow-up" },
+            { name: "Tumelo929", visit_reason: "Lab results" }
+        ];
+
+        // Animated tile for total number in queue
+        queueCount.innerHTML = `<div class="queue-tile animate-tile">
+            <span class="tile-label">Total in Queue</span>
+            <span class="tile-number">${queue.length}</span>
+        </div>`;
+
+        // Banners for each individual
+        queueList.innerHTML = "";
+        queue.forEach((person, idx) => {
+            const banner = document.createElement("div");
+            banner.className = "queue-banner animate-banner";
+            banner.innerHTML = `
+                <div class="banner-index">#${idx + 1}</div>
+                <div class="banner-info">
+                    <span class="banner-name">${person.name}</span>
+                    <span class="banner-reason">${person.visit_reason}</span>
+                </div>
+            `;
+            queueList.appendChild(banner);
+        });
+    }
 });
-
-function showQueueDashboard() {
-    const form = document.getElementById("loginForm");
-    const queueList = document.getElementById("queueList");
-
-    // Hide login form
-    form.style.display = "none";
-
-    // Simulate a list of users in the virtual queue
-    const usersInQueue = [
-        { name: "Mashbeats", position: 1 },
-        { name: "Levi", position: 2 },
-        { name: "Tumi", position: 3 },
-        { name: "Tumelo929", position: 4}
-    ];
-
-    // Build the queue list HTML
-    let html = `<h2>Queue Dashboard</h2>`;
-    html += `<ul>`;
-    usersInQueue.forEach(user => {
-        html += `<li>${user.position}. ${user.name}</li>`;
-    });
-    html += `</ul>`;
-
-    // Display it
-    queueList.innerHTML = html;
-}

@@ -1,19 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Patient Registration</title>
+    <title>Admin Dashboard</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Virtual Clinic Queue</h1>
-    <form id="registrationForm">
-        <label for="name">Name:</label>
-        <input type="text" id="name" required>
-        <label for="visit_type">Visit Type:</label>
-        <input type="text" id="visit_type" required>
-        <button type="submit">Register</button>
+    <h1>Virtual Queue</h1>
+    
+    <!-- ...existing code... -->
+    <form id="loginForm">
+        <h2>Login</h2>
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <br>
+        <button type="submit">Login</button>
+        <br>
+        <span>
+            Don't have an account?
+            <a href="register.html">Register</a>
+        </span>
     </form>
-    <div id="queueStatus"></div>
-    <script src="queue_status.js"></script>
+<!-- ...existing code... -->
+
+    <div id="queueList"></div>
+    <script src="admin.js"></script>
 </body>
 </html>
