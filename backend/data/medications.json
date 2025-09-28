@@ -1,0 +1,36 @@
+[
+  {
+    "name": "Ibuprofen",
+    "class": "Nonsteroidal anti-inflammatory drug (NSAID)",
+    "uses": [
+      "Pain relief",
+      "Reduce inflammation",
+      "Lower fever"
+    ],
+    "common_side_effects": [
+      "Nausea",
+      "Heartburn",
+      "Dizziness"
+    ],
+    "serious_warnings": [
+      "Risk of gastrointestinal bleeding",
+      "Possible cardiovascular risk"
+    ],
+    "interactions_note": "Caution with anticoagulants and other NSAIDs."
+  },
+  {
+    "name": "Paracetamol",
+    "class": "Analgesic / Antipyretic",
+    "uses": [
+      "Mild to moderate pain",
+      "Fever reduction"
+    ],
+    "common_side_effects": [
+      "Generally well tolerated"
+    ],
+    "serious_warnings": [
+      "Liver toxicity at high doses"
+    ],
+    "interactions_note": "Track total acetaminophen intake from all products."
+  }
+]

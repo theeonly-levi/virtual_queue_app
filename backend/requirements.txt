@@ -16,3 +16,4 @@ gTTS
 playsound
 bcrypt
 PyJWT
+openai

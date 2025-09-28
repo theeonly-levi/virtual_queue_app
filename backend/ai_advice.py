@@ -1,4 +1,7 @@
 from __future__ import annotations
+from dotenv import load_dotenv  # loads .env into os.environ
+load_dotenv()
+
 import os, json, re, time, threading
 from dataclasses import dataclass, field
 from pathlib import Path
