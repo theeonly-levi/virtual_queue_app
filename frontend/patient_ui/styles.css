@@ -1,181 +1,64 @@
 
-body { font-family: Arial, sans-serif; margin: 20px; background:#f5f7fa; color:#222; }
-h1 { margin-top:0; font-size:1.9rem; }
-form { margin-bottom: 20px; }
-input { margin: 5px; }
+/* Minimal design system for patient UI */
+* { box-sizing:border-box; }
+body { margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,sans-serif; background:#f5f7fb; color:#1f2732; line-height:1.4; }
+h1 { font-size:1.5rem; margin:0; letter-spacing:-.5px; }
+button { font-family:inherit; }
+a { color:#2563eb; }
 
-/* Layout / Cards */
-.card { max-width:440px; background:#fff; padding:1.5rem 1.75rem; border:1px solid #d9e0e6; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,.04); margin:0 auto; }
+:root {
+  --radius:10px; --border:#dae1e7; --border-strong:#b8c2cc; --primary:#2563eb; --primary-hover:#1d4ed8; --danger:#b91c1c; --soft:#eef3f7;
+}
+
+.site-head { padding:1rem 1.25rem; background:#fff; border-bottom:1px solid var(--border); display:flex; justify-content:center; position:sticky; top:0; z-index:10; }
+.site-foot { text-align:center; padding:2rem .75rem 3rem; font-size:.75rem; color:#64748b; }
+.container { width:100%; max-width:960px; margin:0 auto; padding:1.75rem 1rem 3rem; display:grid; gap:2rem; }
+
+.card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem 1.5rem 1.8rem; max-width:520px; width:100%; margin:0 auto; box-shadow:0 4px 12px -2px rgba(0,0,0,.06); position:relative; }
+
+/* Tabs */
+.tabs { display:flex; background:var(--soft); border-radius:var(--radius); padding:.35rem; gap:.4rem; margin-bottom:1rem; }
+.tab { flex:1; background:none; border:0; padding:.55rem .75rem; border-radius:calc(var(--radius) - 4px); cursor:pointer; font-weight:500; font-size:.9rem; color:#475569; }
+.tab.active { background:#fff; color:#111827; box-shadow:0 1px 2px rgba(0,0,0,.08); }
+.panel { animation:fade .25s ease; }
+@keyframes fade { from { opacity:0; transform:translateY(4px);} to { opacity:1; transform:none;} }
 
 /* Fields */
-.field { display:flex; flex-direction:column; gap:.25rem; }
-.field input { margin:0; padding:.65rem .75rem; border:1px solid #b8c2cc; border-radius:6px; font-size:1rem; }
-.field input:focus { outline:2px solid #2563eb33; border-color:#2563eb; }
+.field { display:flex; flex-direction:column; gap:.3rem; margin-bottom:.9rem; }
+.field label { font-size:.7rem; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:#64748b; }
+.field input { padding:.65rem .75rem; border:1px solid var(--border-strong); border-radius:6px; background:#fff; font-size:.9rem; }
+.field input:focus { outline:2px solid #2563eb33; border-color:var(--primary); }
+.split { display:grid; gap:.9rem; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); }
+.check { display:flex; align-items:center; gap:.5rem; font-size:.75rem; margin:.2rem 0 1rem; }
 
 /* Buttons */
-button.primary { background:#2563eb; color:#fff; border:none; padding:.7rem 1rem; border-radius:6px; cursor:pointer; font-weight:600; font-size:1rem; }
-button.primary:hover { background:#1d4ed8; }
-button.secondary { background:#6b7280; color:#fff; border:none; padding:.6rem 1rem; border-radius:6px; cursor:pointer; font-size:.95rem; }
-button.secondary:hover { background:#525962; }
-button.linkish { background:none; border:none; color:#2563eb; cursor:pointer; padding:0; font:inherit; }
-button.linkish:hover { text-decoration:underline; }
-button.small { font-size:.8rem; }
+.btn { border:none; border-radius:6px; padding:.65rem 1rem; font-size:.9rem; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:.4rem; }
+.btn.primary { background:var(--primary); color:#fff; }
+.btn.primary:hover { background:var(--primary-hover); }
+.btn.secondary { background:#334155; color:#fff; }
+.btn.secondary:hover { filter:brightness(1.05); }
+.btn.outline { background:#fff; border:1px solid var(--border-strong); }
+.btn.outline:hover { background:#f1f5f9; }
+.btn.ghost { background:transparent; color:#334155; }
+.btn.ghost:hover { background:#e2e8f0; }
+.btn.danger { color:var(--danger); }
+.btn.small { font-size:.7rem; padding:.45rem .55rem; }
+.btn.stretch { width:100%; }
+.btn:disabled { opacity:.5; cursor:not-allowed; }
 
-/* Utility */
+/* Ticket / Queue */
+.ticket-box { background:var(--soft); border:1px dashed var(--border-strong); padding:1rem 1.1rem; border-radius:var(--radius); min-height:120px; display:flex; flex-direction:column; gap:.4rem; }
+.ticket-box .empty { margin:0; font-size:.85rem; color:#475569; }
+.muted { color:#64748b; font-size:.75rem; }
+.actions-row { margin-top:1rem; display:flex; gap:.75rem; flex-wrap:wrap; }
+
+/* Util */
 .hidden { display:none !important; }
-.switcher { margin-top:.75rem; font-size:.85rem; }
-.error { color:#b91c1c; font-size:.8rem; min-height:1rem; }
+.error { color:var(--danger); font-size:.7rem; min-height:1rem; margin-top:-.25rem; margin-bottom:.6rem; }
 
-/* Queue */
-#queueSection { margin-top:2rem; max-width:620px; margin-left:auto; margin-right:auto; }
-.queue-box { background:#eef2f6; border:1px solid #d0d7de; padding:1rem; border-radius:8px; min-height:2.4rem; display:flex; align-items:center; }
-.actions { margin-top:1rem; display:flex; gap:1rem; align-items:center; }
-
-@media (max-width:560px) {
-	body { margin:12px; }
-	.card { padding:1.1rem 1.25rem; }
-	h1 { font-size:1.5rem; }
-}
-
-/* Reset some default styles */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-}
-
-body {
-    background-color: #f4f7f9;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px;
-}
-
-/* Header */
-h1 {
-    margin-bottom: 30px;
-    color: #2c3e50;
-}
-
-/* Login Form */
-#loginForm {
-    background-color: #ffffff;
-    padding: 30px 40px;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    max-width: 400px;
-    width: 100%;
-}
-
-#loginForm h2 {
-    margin-bottom: 20px;
-    font-size: 24px;
-    color: #34495e;
-    text-align: center;
-}
-
-label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-}
-
-input[type="text"],
-input[type="password"] {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    transition: border-color 0.3s;
-}
-
-input[type="text"]:focus,
-input[type="password"]:focus {
-    border-color: #3498db;
-    outline: none;
-}
-
-button[type="submit"] {
-    width: 100%;
-    padding: 10px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-button[type="submit"]:hover {
-    background-color: #2980b9;
-}
-
-/* Input Group */
-.input-group {
-    margin-bottom: 18px;
-}
-.input-group label {
-    margin-bottom: 6px;
-    font-size: 15px;
-    color: #34495e;
-}
-.input-group input {
-    font-size: 16px;
-}
-
-/* Login Button */
-.login-btn {
-    width: 100%;
-    padding: 12px;
-    background: linear-gradient(90deg, #43c6ac 0%, #3498db 100%);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.12);
-    transition: background 0.3s, box-shadow 0.3s;
-}
-.login-btn:hover {
-    background: linear-gradient(90deg, #3498db 0%, #43c6ac 100%);
-    box-shadow: 0 4px 16px rgba(52, 152, 219, 0.18);
-}
-
-/* Register Section */
-.register-section {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    margin-top: 18px;
-    font-size: 15px;
-}
-.register-btn {
-    background: #fff;
-    color: #3498db;
-    border: 2px solid #3498db;
-    border-radius: 6px;
-    padding: 6px 18px;
-    font-weight: bold;
-    text-decoration: none;
-    transition: background 0.3s, color 0.3s;
-}
-.register-btn:hover {
-    background: #3498db;
-    color: #fff;
-}
-
-/* Queue List (placeholder) */
-#queueList {
-    margin-top: 50px;
-    width: 100%;
-    max-width: 600px;
+@media (max-width:600px){
+  .container { padding:1.25rem .85rem 3rem; }
+  .card { padding:1.15rem 1.15rem 1.4rem; }
+  .tabs { width:100%; }
 }
 

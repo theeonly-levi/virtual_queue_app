@@ -32,7 +32,7 @@ from collections import defaultdict
 
 # Load environment
 load_dotenv()
-SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = os.environ.get("SECRET_KEY") or "dev-secret-key"  # fallback for POC
 
 app = Flask(__name__)
 
@@ -49,9 +49,18 @@ def set_security_headers(response):
     response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'DENY'
-    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'"
+    # Relaxed CSP for hackathon iteration (allows inline). Tighten later.
+    response.headers['Content-Security-Policy'] = "default-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Permissions-Policy'] = 'geolocation=(), microphone=()'
+    # Simple permissive CORS for POC
+    origin = request.headers.get('Origin', '*')
+    response.headers['Access-Control-Allow-Origin'] = origin
+    response.headers['Vary'] = 'Origin'
+    response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PATCH, OPTIONS'
+    if request.method == 'OPTIONS':
+        response.status_code = 204
     return response
 
 # -------------------------------
@@ -71,6 +80,21 @@ def init_db():
     conn.close()
 
 init_db()
+
+# Integrate new db-backed queue + users abstraction
+from . import db_manager  # type: ignore  # noqa: E402
+from .queue_manager import queue_manager  # noqa: E402
+
+def seed_admin():
+    adm = db_manager.get_user_by_username('admin')
+    if not adm:
+        ok, uid, err = db_manager.create_user('admin', 'admin123', role='admin')
+        if ok:
+            print('[seed] admin user created id', uid)
+        else:
+            print('[seed] admin user creation failed', err)
+
+seed_admin()
 
 # -------------------------------
 # Auth & JWT
@@ -146,39 +170,34 @@ def rate_limiter(identifier):
 # -------------------------------
 @app.route("/register", methods=["POST"])
 def register():
-    data = request.json
-    username = sanitize(data.get("username"))
-    password = data.get("password")
+    data = request.get_json(force=True, silent=True) or {}
+    username = sanitize(data.get('username'))
+    password = data.get('password')
+    name = sanitize(data.get('name') or username)
+    visit_type = sanitize(data.get('visit_type') or 'General')
     if not username or not password:
         return jsonify({"error": "Missing credentials"}), 400
-    hashed = hash_password(password)
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed))
-        conn.commit()
-        conn.close()
-        return jsonify({"message": "User registered"}), 201
-    except sqlite3.IntegrityError:
-        return jsonify({"error": "Username exists"}), 409
+    ok, user_id, err = db_manager.create_user(username, password)
+    if not ok:
+        return jsonify({"error": err or 'Registration failed'}), 409
+    if data.get('auto_join'):
+        queue_manager.add_patient(user_id, name=name, visit_type=visit_type)
+    return jsonify({"message": "User registered", "user_id": user_id}), 201
 
 @app.route("/login", methods=["POST"])
 def login():
-    data = request.json
-    username = sanitize(data.get("username"))
-    password = data.get("password")
+    data = request.get_json(force=True, silent=True) or {}
+    username = sanitize(data.get('username'))
+    password = data.get('password')
     ip = request.remote_addr
     if not rate_limiter(ip):
         return jsonify({"error": "Too many requests"}), 429
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("SELECT id, password FROM users WHERE username = ?", (username,))
-    row = c.fetchone()
-    conn.close()
-    if not row or not verify_password(password, row[1]):
+    user = db_manager.get_user_by_username(username)
+    if not user or not db_manager.verify_password(password, user['password_hash']):
         return jsonify({"error": "Invalid credentials"}), 401
-    token = generate_token(row[0])
-    return jsonify({"token": token})
+    token = generate_token(user['id'], roles=[user.get('role','patient')])
+    # Added 'username' key for frontend expectations
+    return jsonify({"token": token, "user_id": user['id'], "role": user.get('role'), "username": user['username']})
 
 @app.route("/protected", methods=["GET"])
 @login_required
@@ -189,6 +208,69 @@ def protected():
 @role_required(["admin"])
 def admin_only():
     return jsonify({"message": "Welcome, admin!"})
+
+# -------------------------------
+# Queue Endpoints
+# -------------------------------
+@app.route('/queue/join', methods=['POST'])
+@login_required
+def queue_join():
+    data = request.get_json(force=True, silent=True) or {}
+    visit_type = sanitize(data.get('visit_type') or 'General')
+    name = sanitize(data.get('name') or 'Anonymous')
+    user_id = request.user['user_id']
+    entry_id, err = queue_manager.add_patient(user_id=user_id, name=name, visit_type=visit_type)
+    if not entry_id:
+        return jsonify({"error": err or 'Already in queue'}), 409
+    position = queue_manager.user_position(user_id)
+    return jsonify({"message": 'Joined queue', "entry_id": entry_id, "position": position})
+
+@app.route('/queue/me', methods=['GET'])
+@login_required
+def queue_me():
+    user_id = request.user['user_id']
+    position = queue_manager.user_position(user_id)
+    entries = queue_manager.list_waiting()
+    total_waiting = sum(1 for e in entries if e['status'] == 'waiting')
+    serving = next((e for e in entries if e['status'] == 'serving'), None)
+    # Determine the current user's active entry (waiting or serving)
+    user_entry = next((e for e in entries if e['user_id'] == user_id and e['status'] in ('waiting','serving')), None)
+    entry_payload = None
+    if user_entry:
+        entry_payload = {
+            'id': user_entry['id'],
+            'status': user_entry['status'],
+            'position': position if user_entry['status'] == 'waiting' else None
+        }
+    # Added 'entry' key to align with frontend script expectation (data.entry)
+    return jsonify({
+        'in_queue': position is not None,
+        'position': position,
+        'total_waiting': total_waiting,
+        'serving': serving,
+        'entry': entry_payload
+    })
+
+@app.route('/queue/list', methods=['GET'])
+@role_required(['admin'])
+def queue_list():
+    return jsonify(queue_manager.list_waiting())
+
+@app.route('/queue/next', methods=['POST'])
+@role_required(['admin'])
+def queue_next():
+    nxt = queue_manager.advance()
+    if not nxt:
+        return jsonify({'message': 'Queue empty'})
+    return jsonify({'serving': nxt})
+
+@app.route('/queue/done/<int:entry_id>', methods=['POST'])
+@role_required(['admin'])
+def queue_done(entry_id: int):
+    ok = queue_manager.mark_done(entry_id)
+    if not ok:
+        return jsonify({'error': 'Not found or already done'}), 404
+    return jsonify({'message': 'Marked done'})
 
 # -------------------------------
 # Run
